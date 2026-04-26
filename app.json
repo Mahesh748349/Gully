@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Gully",
+    "slug": "gully",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F8FA"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F8FA"
+      },
+      "package": "com.anonymous.gully"
+    }
+  }
+}
