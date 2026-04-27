@@ -1,15 +1,18 @@
 const colors = {
-  primary: "#1769FF",
-  primaryDark: "#0E4DD8",
-  secondary: "#22C55E",
-  background: "#F7F8FA",
+  primary: "#0F62FE",
+  primaryDark: "#0B4FD1",
+  secondary: "#14B86A",
+  accent: "#FF8A3D",
+  background: "#F3F5F8",
   card: "#FFFFFF",
-  text: "#111827",
-  subText: "#6B7280",
-  border: "#E5E7EB",
+  softCard: "#EAF2FF",
+  text: "#102033",
+  subText: "#607087",
+  border: "#D7E0EA",
   danger: "#DC2626",
   warning: "#F59E0B",
   success: "#16A34A",
+  shadow: "rgba(16, 32, 51, 0.08)",
 };
 
 export default colors;

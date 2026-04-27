@@ -76,6 +76,9 @@ export default function RegisterScreen({ navigation }) {
         <Text style={styles.linkText} onPress={() => navigation.goBack()}>
           Already have an account? Login
         </Text>
+        <Text style={styles.secondaryLinkText} onPress={() => navigation.navigate("Welcome")}>
+          Back to home
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -116,6 +119,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginTop: 18,
+    textAlign: "center",
+  },
+  secondaryLinkText: {
+    color: colors.subText,
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 12,
     textAlign: "center",
   },
 });

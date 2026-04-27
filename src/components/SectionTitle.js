@@ -2,11 +2,11 @@ import React from "react";
 import { StyleSheet, Text } from "react-native";
 import colors from "../theme/colors";
 
-export default function SectionTitle({ title, subtitle }) {
+export default function SectionTitle({ title, subtitle, light = false }) {
   return (
     <>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      <Text style={[styles.title, light && styles.lightTitle]}>{title}</Text>
+      {subtitle ? <Text style={[styles.subtitle, light && styles.lightSubtitle]}>{subtitle}</Text> : null}
     </>
   );
 }
@@ -17,9 +17,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "800",
   },
+  lightTitle: {
+    color: "#FFFFFF",
+  },
   subtitle: {
     color: colors.subText,
     fontSize: 15,
     marginTop: 6,
+  },
+  lightSubtitle: {
+    color: "#DDE8FF",
   },
 });

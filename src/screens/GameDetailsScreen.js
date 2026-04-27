@@ -8,6 +8,7 @@ import {
   sendJoinRequest,
   subscribeToGame,
   subscribeToGameRequests,
+  updateGameStatus,
   updateJoinRequestStatus,
 } from "../services/gameService";
 import colors from "../theme/colors";
@@ -35,6 +36,8 @@ export default function GameDetailsScreen({ route }) {
     () => requests.find((request) => request.userId === user?.uid),
     [requests, user?.uid]
   );
+  const pendingCount = requests.filter((request) => request.status === "pending").length;
+  const acceptedCount = requests.filter((request) => request.status === "accepted").length;
 
   const handleJoinRequest = async () => {
     if (!game) {
@@ -82,6 +85,24 @@ export default function GameDetailsScreen({ route }) {
     }
   };
 
+  const handleToggleGameStatus = async () => {
+    if (!game) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await updateGameStatus({
+        gameId,
+        status: game.status === "open" ? "full" : "open",
+      });
+    } catch (error) {
+      Alert.alert("Unable to update game", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!game) {
     return (
       <View style={styles.centeredContainer}>
@@ -92,13 +113,40 @@ export default function GameDetailsScreen({ route }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.heroCard}>
+        <Text style={styles.heroStatus}>{game.status === "full" ? "Full roster" : "Open for players"}</Text>
+        <SectionTitle title={game.sport} subtitle={game.locationName} light />
+        <Text style={styles.heroMeta}>Hosted by {game.creatorName}</Text>
+      </View>
+
+      <View style={styles.statsRow}>
+        <View style={styles.statPill}>
+          <Text style={styles.statValue}>{game.playerCount}</Text>
+          <Text style={styles.statLabel}>Current players</Text>
+        </View>
+        <View style={styles.statPill}>
+          <Text style={styles.statValue}>{Math.max(game.maxPlayers - game.playerCount, 0)}</Text>
+          <Text style={styles.statLabel}>Spots left</Text>
+        </View>
+        <View style={styles.statPill}>
+          <Text style={styles.statValue}>{pendingCount}</Text>
+          <Text style={styles.statLabel}>Pending asks</Text>
+        </View>
+      </View>
+
       <View style={styles.card}>
-        <SectionTitle title={game.sport} subtitle={game.locationName} />
         <Text style={styles.infoText}>Time: {formatGameDate(game.gameTime)}</Text>
-        <Text style={styles.infoText}>
-          Players: {game.playerCount}/{game.maxPlayers}
-        </Text>
-        <Text style={styles.infoText}>Created by: {game.creatorName}</Text>
+        <Text style={styles.infoText}>Level: {game.skillLevel || "Mixed"}</Text>
+        <Text style={styles.infoText}>Players: {game.playerCount}/{game.maxPlayers}</Text>
+        <Text style={styles.infoText}>Accepted joiners: {acceptedCount}</Text>
+        {game.notes ? <Text style={styles.notesText}>Notes: {game.notes}</Text> : null}
+
+        {myRequest ? (
+          <View style={styles.requestStateBox}>
+            <Text style={styles.requestStateTitle}>Your request status</Text>
+            <Text style={styles.requestStateText}>{myRequest.status}</Text>
+          </View>
+        ) : null}
 
         {!isCreator ? (
           <PrimaryButton
@@ -109,11 +157,23 @@ export default function GameDetailsScreen({ route }) {
             style={styles.button}
           />
         ) : null}
+
+        {isCreator ? (
+          <PrimaryButton
+            title={game.status === "open" ? "Mark Game Full" : "Reopen Game"}
+            onPress={handleToggleGameStatus}
+            loading={loading}
+            style={styles.secondaryButton}
+          />
+        ) : null}
       </View>
 
       {isCreator ? (
         <View style={styles.requestsCard}>
-          <Text style={styles.requestsTitle}>Join requests</Text>
+          <Text style={styles.requestsTitle}>Creator dashboard</Text>
+          <Text style={styles.requestsSubtitle}>
+            Review incoming requests and fill the remaining {Math.max(game.maxPlayers - game.playerCount, 0)} spots.
+          </Text>
           {requests.length === 0 ? (
             <Text style={styles.emptyRequests}>No requests yet.</Text>
           ) : (
@@ -149,9 +209,53 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
   },
+  heroCard: {
+    backgroundColor: "#0F62FE",
+    borderRadius: 24,
+    padding: 20,
+  },
+  heroStatus: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderRadius: 999,
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 12,
+    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  heroMeta: {
+    color: "#DBEAFE",
+    fontSize: 14,
+    marginTop: 10,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 16,
+  },
+  statPill: {
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    flex: 1,
+    padding: 16,
+  },
+  statValue: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  statLabel: {
+    color: colors.subText,
+    fontSize: 12,
+    marginTop: 6,
+  },
   card: {
     backgroundColor: colors.card,
     borderRadius: 24,
+    marginTop: 16,
     padding: 20,
   },
   infoText: {
@@ -159,8 +263,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
   },
+  requestStateBox: {
+    backgroundColor: "#EFF6FF",
+    borderRadius: 18,
+    marginTop: 16,
+    padding: 16,
+  },
+  requestStateTitle: {
+    color: colors.primaryDark,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  requestStateText: {
+    color: colors.primaryDark,
+    fontSize: 18,
+    fontWeight: "800",
+    marginTop: 6,
+    textTransform: "capitalize",
+  },
   button: {
     marginTop: 18,
+  },
+  secondaryButton: {
+    backgroundColor: colors.accent,
+    marginTop: 14,
+  },
+  notesText: {
+    color: colors.text,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 14,
   },
   requestsCard: {
     backgroundColor: colors.card,
@@ -172,6 +304,12 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontWeight: "800",
+  },
+  requestsSubtitle: {
+    color: colors.subText,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
   },
   emptyRequests: {
     color: colors.subText,

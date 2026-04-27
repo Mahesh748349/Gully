@@ -20,6 +20,11 @@
         "backgroundColor": "#F7F8FA"
       },
       "package": "com.anonymous.gully"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "451e8bad-a8a1-4193-91c2-5b3484741a33"
+      }
     }
   }
 }

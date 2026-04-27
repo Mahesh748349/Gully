@@ -19,14 +19,24 @@ export const subscribeToGames = (callback) => {
   });
 };
 
-export const createGame = async ({ creator, sport, gameTime, locationName, maxPlayers }) => {
+export const createGame = async ({
+  creator,
+  sport,
+  skillLevel,
+  gameTime,
+  locationName,
+  maxPlayers,
+  notes,
+}) => {
   return addDoc(collection(db, "games"), {
     creatorId: creator.uid,
     creatorName: creator.name,
     sport,
+    skillLevel,
     gameTime,
     locationName,
     maxPlayers: Number(maxPlayers),
+    notes: notes?.trim() || "",
     playerCount: 1,
     status: "open",
     createdAt: serverTimestamp(),
@@ -74,4 +84,8 @@ export const updateJoinRequestStatus = async ({ gameId, requestId, status, nextP
     playerCount: nextPlayerCount,
     status: gameStatus,
   });
+};
+
+export const updateGameStatus = async ({ gameId, status }) => {
+  await updateDoc(doc(db, "games", gameId), { status });
 };

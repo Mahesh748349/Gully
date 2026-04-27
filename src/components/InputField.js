@@ -8,7 +8,7 @@ export default function InputField({ label, style, ...props }) {
       <Text style={styles.label}>{label}</Text>
       <TextInput
         placeholderTextColor={colors.subText}
-        style={styles.input}
+        style={[styles.input, props.multiline && styles.multilineInput]}
         {...props}
       />
     </View>
@@ -31,5 +31,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: 14,
     paddingVertical: 14,
+  },
+  multilineInput: {
+    minHeight: 96,
+    textAlignVertical: "top",
   },
 });
