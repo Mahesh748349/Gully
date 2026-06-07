@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 import PrimaryButton from "../components/PrimaryButton";
 import RequestCard from "../components/RequestCard";
 import SectionTitle from "../components/SectionTitle";
@@ -13,6 +14,7 @@ import {
 } from "../services/gameService";
 import colors from "../theme/colors";
 import { formatGameDate } from "../utils/date";
+import { calculateDistanceInKm } from "../utils/location";
 
 export default function GameDetailsScreen({ route }) {
   const { gameId } = route.params;
@@ -38,6 +40,8 @@ export default function GameDetailsScreen({ route }) {
   );
   const pendingCount = requests.filter((request) => request.status === "pending").length;
   const acceptedCount = requests.filter((request) => request.status === "accepted").length;
+  const distanceKm = calculateDistanceInKm(profile?.locationCoords, game?.coordinates);
+  const distanceValue = distanceKm !== null ? distanceKm.toFixed(1) : profile?.locationCoords ? "No pin" : "Set GPS";
 
   const handleJoinRequest = async () => {
     if (!game) {
@@ -116,7 +120,9 @@ export default function GameDetailsScreen({ route }) {
       <View style={styles.heroCard}>
         <Text style={styles.heroStatus}>{game.status === "full" ? "Full roster" : "Open for players"}</Text>
         <SectionTitle title={game.sport} subtitle={game.locationName} light />
-        <Text style={styles.heroMeta}>Hosted by {game.creatorName}</Text>
+        <Text style={styles.heroMeta}>
+          Hosted by {game.creatorName} {game.locality ? `| ${game.locality}` : ""}
+        </Text>
       </View>
 
       <View style={styles.statsRow}>
@@ -129,10 +135,34 @@ export default function GameDetailsScreen({ route }) {
           <Text style={styles.statLabel}>Spots left</Text>
         </View>
         <View style={styles.statPill}>
-          <Text style={styles.statValue}>{pendingCount}</Text>
-          <Text style={styles.statLabel}>Pending asks</Text>
+          <Text style={styles.statValue}>{distanceValue}</Text>
+          <Text style={styles.statLabel}>Distance km</Text>
         </View>
       </View>
+
+      {game.coordinates ? (
+        <View style={styles.mapWrap}>
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            region={{
+              latitude: game.coordinates.latitude,
+              longitude: game.coordinates.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            <Marker coordinate={game.coordinates} title={game.locationName} description={game.locality} />
+          </MapView>
+        </View>
+      ) : (
+        <View style={styles.noMapCard}>
+          <Text style={styles.noMapTitle}>No map pin saved</Text>
+          <Text style={styles.noMapText}>
+            This game was created without Google coordinates. New games now require a searched place or current location.
+          </Text>
+        </View>
+      )}
 
       <View style={styles.card}>
         <Text style={styles.infoText}>Time: {formatGameDate(game.gameTime)}</Text>
@@ -187,6 +217,7 @@ export default function GameDetailsScreen({ route }) {
               />
             ))
           )}
+          <Text style={styles.requestsFooter}>{pendingCount} requests are still waiting for your decision.</Text>
         </View>
       ) : null}
     </ScrollView>
@@ -206,12 +237,12 @@ const styles = StyleSheet.create({
   },
   container: {
     backgroundColor: colors.background,
-    padding: 20,
+    padding: 16,
     paddingBottom: 32,
   },
   heroCard: {
-    backgroundColor: "#0F62FE",
-    borderRadius: 24,
+    backgroundColor: colors.ink,
+    borderRadius: 22,
     padding: 20,
   },
   heroStatus: {
@@ -238,9 +269,11 @@ const styles = StyleSheet.create({
   },
   statPill: {
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
     flex: 1,
-    padding: 16,
+    padding: 14,
   },
   statValue: {
     color: colors.text,
@@ -252,9 +285,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
   },
+  mapWrap: {
+    borderRadius: 22,
+    marginTop: 16,
+    overflow: "hidden",
+  },
+  map: {
+    height: 220,
+    width: "100%",
+  },
+  noMapCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 18,
+  },
+  noMapTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  noMapText: {
+    color: colors.subText,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+  },
   card: {
     backgroundColor: colors.card,
-    borderRadius: 24,
+    borderColor: colors.border,
+    borderRadius: 20,
+    borderWidth: 1,
     marginTop: 16,
     padding: 20,
   },
@@ -264,8 +327,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   requestStateBox: {
-    backgroundColor: "#EFF6FF",
-    borderRadius: 18,
+    backgroundColor: colors.softCard,
+    borderColor: "#D7E5FF",
+    borderRadius: 16,
+    borderWidth: 1,
     marginTop: 16,
     padding: 16,
   },
@@ -296,7 +361,9 @@ const styles = StyleSheet.create({
   },
   requestsCard: {
     backgroundColor: colors.card,
-    borderRadius: 24,
+    borderColor: colors.border,
+    borderRadius: 20,
+    borderWidth: 1,
     marginTop: 18,
     padding: 20,
   },
@@ -315,5 +382,11 @@ const styles = StyleSheet.create({
     color: colors.subText,
     fontSize: 14,
     marginTop: 12,
+  },
+  requestsFooter: {
+    color: colors.primaryDark,
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 14,
   },
 });

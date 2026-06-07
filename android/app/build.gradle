@@ -4,6 +4,25 @@ apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
+def getGoogleMapsApiKey = {
+    def envValue = System.getenv("EXPO_PUBLIC_GOOGLE_MAPS_API_KEY")
+    if (envValue) {
+        return envValue
+    }
+
+    def envFile = file("${projectRoot}/.env")
+    if (!envFile.exists()) {
+        return ""
+    }
+
+    def keyLine = envFile.readLines().find { it.startsWith("EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=") }
+    if (!keyLine) {
+        return ""
+    }
+
+    return keyLine.substring(keyLine.indexOf("=") + 1).trim()
+}
+
 static def versionToNumber(major, minor, patch) {
   return patch * 100 + minor * 10000 + major * 1000000
 }
@@ -116,6 +135,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+        manifestPlaceholders = [googleMapsApiKey: getGoogleMapsApiKey()]
     }
     signingConfigs {
         debug {

@@ -6,10 +6,15 @@ import colors from "../theme/colors";
 
 export default function WelcomeScreen({ navigation }) {
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.heroCard}>
         <View style={styles.topRow}>
-          <Text style={styles.brand}>Gully</Text>
+          <View style={styles.brandLockup}>
+            <View style={styles.brandMark}>
+              <Text style={styles.brandMarkText}>G</Text>
+            </View>
+            <Text style={styles.brand}>Gully</Text>
+          </View>
           <View style={styles.navRow}>
             <Pressable style={styles.navButton} onPress={() => navigation.navigate("Login")}>
               <Text style={styles.navButtonText}>Login</Text>
@@ -20,44 +25,57 @@ export default function WelcomeScreen({ navigation }) {
           </View>
         </View>
 
-        <Text style={styles.heroBadge}>Find players. Start games. Build local sports.</Text>
+        <Text style={styles.heroBadge}>Live local sports network</Text>
         <SectionTitle
-          title="Your next match starts here"
-          subtitle="Create or discover cricket, football, badminton and more with a simple community-first app."
+          title="Find the right players before the match starts."
+          subtitle="Create games, pin grounds on the map, and manage join requests with a focused app for local sport communities."
           light
         />
 
-        <View style={styles.previewGrid}>
-          <View style={[styles.previewCard, styles.previewPrimary]}>
-            <Text style={styles.previewTitle}>Live game feed</Text>
-            <Text style={styles.previewText}>Open games update in real time so nearby players never miss a chance.</Text>
+        <View style={styles.productPanel}>
+          <View style={styles.panelHeader}>
+            <Text style={styles.panelTitle}>Today near you</Text>
+            <Text style={styles.panelStatus}>Live</Text>
           </View>
-          <View style={styles.previewColumn}>
-            <View style={styles.previewMiniCard}>
-              <Text style={styles.previewMiniTitle}>Easy join requests</Text>
+          <View style={styles.matchRow}>
+            <View style={styles.sportIcon}>
+              <Text style={styles.sportIconText}>C</Text>
             </View>
-            <View style={[styles.previewMiniCard, styles.previewMiniAccent]}>
-              <Text style={styles.previewMiniTitleDark}>Skill levels and match notes</Text>
+            <View style={styles.matchCopy}>
+              <Text style={styles.matchTitle}>Cricket at Shivaji Park</Text>
+              <Text style={styles.matchMeta}>7 spots left - 2.4 km away</Text>
             </View>
+          </View>
+          <View style={styles.mapPreview}>
+            <View style={[styles.mapPin, styles.mapPinPrimary]} />
+            <View style={[styles.mapPin, styles.mapPinAccent]} />
+            <View style={[styles.mapPin, styles.mapPinSuccess]} />
+            <View style={styles.routeLine} />
           </View>
         </View>
 
-        <PrimaryButton title="Get Started" onPress={() => navigation.navigate("Register")} style={styles.heroButton} />
+        <View style={styles.heroActions}>
+          <PrimaryButton title="Create Account" onPress={() => navigation.navigate("Register")} style={styles.heroButton} />
+          <PrimaryButton
+            title="I already play"
+            onPress={() => navigation.navigate("Login")}
+            style={styles.heroButton}
+            variant="secondary"
+          />
+        </View>
       </View>
 
-      <View style={styles.infoRow}>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>6</Text>
-          <Text style={styles.infoLabel}>Core screens built</Text>
-        </View>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>Live</Text>
-          <Text style={styles.infoLabel}>Firestore updates</Text>
-        </View>
-        <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>Fast</Text>
-          <Text style={styles.infoLabel}>Simple Firebase backend</Text>
-        </View>
+      <View style={styles.valueGrid}>
+        {[
+          ["Realtime", "Games and requests update instantly."],
+          ["Map-first", "Grounds are pinned for better discovery."],
+          ["Organized", "Hosts can review players in one flow."],
+        ].map(([title, body]) => (
+          <View key={title} style={styles.valueCard}>
+            <Text style={styles.infoValue}>{title}</Text>
+            <Text style={styles.infoLabel}>{body}</Text>
+          </View>
+        ))}
       </View>
     </ScrollView>
   );
@@ -67,13 +85,14 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
     flexGrow: 1,
-    padding: 20,
+    padding: 18,
+    paddingBottom: 28,
   },
   heroCard: {
-    backgroundColor: "#0F62FE",
-    borderRadius: 32,
-    minHeight: 620,
-    padding: 22,
+    backgroundColor: colors.ink,
+    borderRadius: 28,
+    overflow: "hidden",
+    padding: 20,
   },
   topRow: {
     alignItems: "center",
@@ -82,17 +101,34 @@ const styles = StyleSheet.create({
   },
   brand: {
     color: "#FFFFFF",
-    fontSize: 26,
+    fontSize: 23,
     fontWeight: "900",
-    letterSpacing: 0.5,
+  },
+  brandLockup: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
+  },
+  brandMark: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    height: 34,
+    justifyContent: "center",
+    width: 34,
+  },
+  brandMarkText: {
+    color: colors.primaryDark,
+    fontSize: 18,
+    fontWeight: "900",
   },
   navRow: {
     flexDirection: "row",
     gap: 8,
   },
   navButton: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
@@ -103,7 +139,7 @@ const styles = StyleSheet.create({
   },
   navOutlineButton: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 999,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
@@ -114,84 +150,134 @@ const styles = StyleSheet.create({
   },
   heroBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderRadius: 999,
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "700",
-    marginTop: 28,
+    marginTop: 42,
     overflow: "hidden",
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
-  previewGrid: {
+  productPanel: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 22,
+    marginTop: 28,
+    padding: 16,
+  },
+  panelHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  panelTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  panelStatus: {
+    backgroundColor: "#EAFBF3",
+    borderRadius: 999,
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: "800",
+    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  matchRow: {
+    alignItems: "center",
     flexDirection: "row",
     gap: 12,
-    marginTop: 28,
+    marginTop: 16,
   },
-  previewCard: {
-    borderRadius: 24,
+  sportIcon: {
+    alignItems: "center",
+    backgroundColor: colors.softCard,
+    borderRadius: 14,
+    height: 46,
+    justifyContent: "center",
+    width: 46,
+  },
+  sportIconText: {
+    color: colors.primaryDark,
+    fontSize: 20,
+    fontWeight: "900",
+  },
+  matchCopy: {
     flex: 1,
-    minHeight: 220,
-    padding: 18,
   },
-  previewPrimary: {
-    backgroundColor: "#FFFFFF",
-  },
-  previewTitle: {
+  matchTitle: {
     color: colors.text,
-    fontSize: 21,
-    fontWeight: "800",
+    fontSize: 15,
+    fontWeight: "900",
   },
-  previewText: {
+  matchMeta: {
     color: colors.subText,
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: 12,
+    fontSize: 13,
+    marginTop: 4,
   },
-  previewColumn: {
-    flex: 1,
+  mapPreview: {
+    backgroundColor: "#F1F5F9",
+    borderRadius: 18,
+    height: 150,
+    marginTop: 16,
+    overflow: "hidden",
+  },
+  routeLine: {
+    backgroundColor: "#CBD5E1",
+    height: 3,
+    left: 54,
+    position: "absolute",
+    right: 54,
+    top: 78,
+    transform: [{ rotate: "-18deg" }],
+  },
+  mapPin: {
+    borderColor: "#FFFFFF",
+    borderRadius: 11,
+    borderWidth: 4,
+    height: 22,
+    position: "absolute",
+    width: 22,
+  },
+  mapPinPrimary: {
+    backgroundColor: colors.primary,
+    left: 38,
+    top: 54,
+  },
+  mapPinAccent: {
+    backgroundColor: colors.accent,
+    right: 52,
+    top: 78,
+  },
+  mapPinSuccess: {
+    backgroundColor: colors.success,
+    left: 128,
+    top: 34,
+  },
+  heroActions: {
     gap: 12,
-  },
-  previewMiniCard: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderRadius: 24,
-    flex: 1,
-    justifyContent: "flex-end",
-    padding: 18,
-  },
-  previewMiniAccent: {
-    backgroundColor: "#FFF1E7",
-  },
-  previewMiniTitle: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "800",
-    lineHeight: 22,
-  },
-  previewMiniTitleDark: {
-    color: "#8A4A1F",
-    fontSize: 17,
-    fontWeight: "800",
-    lineHeight: 22,
+    marginTop: 22,
   },
   heroButton: {
-    marginTop: 24,
+    width: "100%",
   },
-  infoRow: {
-    flexDirection: "row",
-    gap: 10,
+  valueGrid: {
+    gap: 12,
     marginTop: 18,
   },
-  infoCard: {
+  valueCard: {
     backgroundColor: colors.card,
-    borderRadius: 20,
-    flex: 1,
-    padding: 16,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 18,
   },
   infoValue: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "900",
   },
   infoLabel: {

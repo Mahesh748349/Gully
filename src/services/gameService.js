@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  collectionGroup,
   doc,
   getDoc,
   onSnapshot,
@@ -9,6 +10,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
@@ -25,6 +27,8 @@ export const createGame = async ({
   skillLevel,
   gameTime,
   locationName,
+  locality,
+  coordinates,
   maxPlayers,
   notes,
 }) => {
@@ -35,6 +39,8 @@ export const createGame = async ({
     skillLevel,
     gameTime,
     locationName,
+    locality,
+    coordinates,
     maxPlayers: Number(maxPlayers),
     notes: notes?.trim() || "",
     playerCount: 1,
@@ -88,4 +94,18 @@ export const updateJoinRequestStatus = async ({ gameId, requestId, status, nextP
 
 export const updateGameStatus = async ({ gameId, status }) => {
   await updateDoc(doc(db, "games", gameId), { status });
+};
+
+export const subscribeToUserRequests = (userId, callback) => {
+  const userRequestsQuery = query(collectionGroup(db, "requests"), where("userId", "==", userId));
+
+  return onSnapshot(userRequestsQuery, (snapshot) => {
+    callback(
+      snapshot.docs.map((item) => ({
+        id: item.id,
+        gameId: item.ref.parent.parent?.id,
+        ...item.data(),
+      }))
+    );
+  });
 };

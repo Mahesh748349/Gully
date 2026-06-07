@@ -14,8 +14,9 @@ export default function SectionTitle({ title, subtitle, light = false }) {
 const styles = StyleSheet.create({
   title: {
     color: colors.text,
-    fontSize: 24,
-    fontWeight: "800",
+    fontSize: 26,
+    fontWeight: "900",
+    lineHeight: 32,
   },
   lightTitle: {
     color: "#FFFFFF",
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.subText,
     fontSize: 15,
+    lineHeight: 22,
     marginTop: 6,
   },
   lightSubtitle: {

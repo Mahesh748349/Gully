@@ -9,6 +9,7 @@ export default function InputField({ label, style, ...props }) {
       <TextInput
         placeholderTextColor={colors.subText}
         style={[styles.input, props.multiline && styles.multilineInput]}
+        selectionColor={colors.primary}
         {...props}
       />
     </View>
@@ -17,20 +18,21 @@ export default function InputField({ label, style, ...props }) {
 
 const styles = StyleSheet.create({
   label: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "600",
+    color: colors.ink,
+    fontSize: 13,
+    fontWeight: "800",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.surface,
     borderColor: colors.border,
     borderRadius: 14,
     borderWidth: 1,
     color: colors.text,
     fontSize: 15,
+    minHeight: 52,
     paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingVertical: 13,
   },
   multilineInput: {
     minHeight: 96,

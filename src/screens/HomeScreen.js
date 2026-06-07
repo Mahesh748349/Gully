@@ -9,6 +9,7 @@ import { SPORTS } from "../constants/sports";
 import { useAuth } from "../context/AuthContext";
 import { subscribeToGames } from "../services/gameService";
 import colors from "../theme/colors";
+import { calculateDistanceInKm } from "../utils/location";
 import { getSportMeta } from "../utils/sportMeta";
 
 export default function HomeScreen({ navigation }) {
@@ -22,30 +23,55 @@ export default function HomeScreen({ navigation }) {
     return unsubscribe;
   }, []);
 
+  const enrichedGames = useMemo(
+    () =>
+      games.map((game) => ({
+        ...game,
+        distanceKm: calculateDistanceInKm(profile?.locationCoords, game.coordinates),
+      })),
+    [games, profile?.locationCoords]
+  );
+
   const filteredGames = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
 
-    return games
+    return enrichedGames
       .filter((game) => game.status === "open")
       .filter((game) => (sportFilter === "All" ? true : game.sport === sportFilter))
       .filter((game) =>
         normalizedSearch
           ? game.locationName?.toLowerCase().includes(normalizedSearch) ||
-            game.sport?.toLowerCase().includes(normalizedSearch)
+            game.sport?.toLowerCase().includes(normalizedSearch) ||
+            game.locality?.toLowerCase().includes(normalizedSearch)
           : true
-      );
-  }, [games, searchText, sportFilter]);
+      )
+      .sort((first, second) => {
+        const firstDistance = first.distanceKm ?? Number.MAX_SAFE_INTEGER;
+        const secondDistance = second.distanceKm ?? Number.MAX_SAFE_INTEGER;
+        return firstDistance - secondDistance;
+      });
+  }, [enrichedGames, searchText, sportFilter]);
 
   const myHostedGames = useMemo(
-    () => games.filter((game) => game.creatorId === user?.uid).slice(0, 5),
-    [games, user?.uid]
+    () => enrichedGames.filter((game) => game.creatorId === user?.uid).slice(0, 5),
+    [enrichedGames, user?.uid]
   );
 
-  const openGamesCount = games.filter((game) => game.status === "open").length;
+  const nearbyGamesCount = enrichedGames.filter(
+    (game) => game.distanceKm !== null && game.distanceKm <= 10 && game.status === "open"
+  ).length;
+  const openGamesCount = enrichedGames.filter((game) => game.status === "open").length;
   const totalSpotsLeft = filteredGames.reduce(
     (total, game) => total + Math.max((game.maxPlayers || 0) - (game.playerCount || 0), 0),
     0
   );
+  const getDistanceText = (game) => {
+    if (game.distanceKm !== null) {
+      return `${game.distanceKm.toFixed(1)} km away`;
+    }
+
+    return profile?.locationCoords ? "No map pin" : "Set GPS for distance";
+  };
 
   return (
     <View style={styles.container}>
@@ -53,15 +79,26 @@ export default function HomeScreen({ navigation }) {
         data={filteredGames}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <GameCard item={item} onPress={() => navigation.navigate("GameDetails", { gameId: item.id })} />
+          <GameCard
+            item={item}
+            distanceText={getDistanceText(item)}
+            onPress={() => navigation.navigate("GameDetails", { gameId: item.id })}
+          />
         )}
         ListHeaderComponent={
           <>
             <View style={styles.heroCard}>
-              <Text style={styles.heroEyebrow}>Live community board</Text>
+              <View style={styles.heroTopRow}>
+                <Text style={styles.heroEyebrow}>Local sports network</Text>
+                <Text style={styles.liveBadge}>Live</Text>
+              </View>
               <SectionTitle
                 title={`Hi ${profile?.name?.split(" ")[0] || "Player"}`}
-                subtitle="Find your next game, host one in minutes, and keep local sports moving."
+                subtitle={
+                  profile?.locationLabel
+                    ? `Showing games around ${profile.locationLabel}.`
+                    : "Set your locality in Profile to find nearby matches faster."
+                }
                 light
               />
               <View style={styles.headerActions}>
@@ -70,21 +107,26 @@ export default function HomeScreen({ navigation }) {
                   onPress={() => navigation.navigate("CreateGame")}
                   style={styles.headerButton}
                 />
-                <Pressable style={styles.profileButton} onPress={() => navigation.navigate("Profile")}>
-                  <Text style={styles.profileButtonText}>Profile</Text>
+                <Pressable style={styles.actionTile} onPress={() => navigation.navigate("PlayerMap")}>
+                  <Text style={styles.actionIcon}>M</Text>
+                  <Text style={styles.actionText}>Live Map</Text>
+                </Pressable>
+                <Pressable style={styles.actionTile} onPress={() => navigation.navigate("Profile")}>
+                  <Text style={styles.actionIcon}>P</Text>
+                  <Text style={styles.actionText}>Profile</Text>
                 </Pressable>
               </View>
             </View>
 
             <View style={styles.statsRow}>
-              <StatCard label="Open games today" value={openGamesCount} tone="primary" />
+              <StatCard label="Nearby open games" value={nearbyGamesCount} tone="primary" />
               <StatCard label="Your hosted games" value={myHostedGames.length} tone="success" />
               <StatCard label="Open player spots" value={totalSpotsLeft} tone="accent" />
             </View>
 
             <View style={styles.filtersCard}>
               <InputField
-                label="Search by sport or address"
+                label="Search by sport or locality"
                 onChangeText={setSearchText}
                 placeholder="Example: cricket or Dadar"
                 value={searchText}
@@ -96,13 +138,15 @@ export default function HomeScreen({ navigation }) {
                   const sport = getSportMeta(item);
 
                   return (
-                    <Text
+                    <Pressable
                       key={item}
                       onPress={() => setSportFilter(item)}
                       style={[styles.filterChip, selected && styles.selectedFilterChip]}
                     >
-                      {item === "All" ? "All" : `${sport.icon} ${item}`}
-                    </Text>
+                      <Text style={[styles.filterChipText, selected && styles.selectedFilterChipText]}>
+                        {item === "All" ? "All" : `${sport.icon} ${item}`}
+                      </Text>
+                    </Pressable>
                   );
                 })}
               </View>
@@ -126,7 +170,7 @@ export default function HomeScreen({ navigation }) {
                         {game.locationName}
                       </Text>
                       <Text style={styles.hostedMeta}>
-                        {game.playerCount}/{game.maxPlayers} players
+                        {game.locality || "No locality"} | {game.playerCount}/{game.maxPlayers}
                       </Text>
                     </Pressable>
                   ))}
@@ -136,14 +180,16 @@ export default function HomeScreen({ navigation }) {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Discover games</Text>
-              <Text style={styles.sectionHint}>{filteredGames.length} showing</Text>
+              <Text style={styles.sectionHint}>{filteredGames.length} of {openGamesCount} open</Text>
             </View>
           </>
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No games found</Text>
-            <Text style={styles.emptySubtitle}>Create a game or change your filters to see results.</Text>
+            <Text style={styles.emptySubtitle}>
+              Try another sport or update your locality in Profile for better nearby results.
+            </Text>
           </View>
         }
         contentContainerStyle={styles.listContent}
@@ -157,23 +203,28 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   heroCard: {
-    backgroundColor: colors.card,
-    borderRadius: 28,
-    padding: 22,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 10 },
+    backgroundColor: colors.ink,
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: colors.shadowStrong,
+    shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 1,
-    shadowRadius: 18,
+    shadowRadius: 24,
+  },
+  heroTopRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   heroEyebrow: {
     alignSelf: "flex-start",
-    backgroundColor: "#E8F0FF",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderRadius: 999,
-    color: colors.primaryDark,
+    color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "700",
     marginBottom: 14,
@@ -181,36 +232,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
+  liveBadge: {
+    backgroundColor: "#D1FAE5",
+    borderRadius: 999,
+    color: colors.success,
+    fontSize: 12,
+    fontWeight: "900",
+    overflow: "hidden",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   headerActions: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 18,
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 20,
   },
   headerButton: {
-    flex: 1,
+    flexBasis: "100%",
   },
-  profileButton: {
+  actionTile: {
     alignItems: "center",
-    backgroundColor: "#EAF2FF",
-    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderColor: "rgba(255,255,255,0.12)",
+    borderRadius: 16,
+    borderWidth: 1,
+    flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 16,
+    minHeight: 72,
+    minWidth: 92,
+    padding: 10,
   },
-  profileButtonText: {
-    color: colors.primaryDark,
-    fontSize: 14,
-    fontWeight: "700",
+  actionIcon: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  actionText: {
+    color: "#DDE8FF",
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 6,
   },
   statsRow: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 18,
+    gap: 8,
+    marginTop: 16,
   },
   filtersCard: {
     backgroundColor: colors.card,
-    borderRadius: 24,
-    marginTop: 18,
-    padding: 18,
+    borderColor: colors.border,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginTop: 16,
+    padding: 16,
   },
   filterRow: {
     flexDirection: "row",
@@ -219,17 +294,24 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   filterChip: {
-    backgroundColor: "#EFF3F8",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 999,
-    color: colors.text,
-    overflow: "hidden",
+    borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
   selectedFilterChip: {
     backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  filterChipText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  selectedFilterChipText: {
     color: "#FFFFFF",
-    fontWeight: "700",
   },
   hostedSection: {
     marginTop: 20,
@@ -256,8 +338,8 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   hostedCard: {
-    backgroundColor: "#0F62FE",
-    borderRadius: 22,
+    backgroundColor: colors.ink,
+    borderRadius: 18,
     minHeight: 128,
     padding: 18,
     width: 220,
@@ -280,13 +362,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   listContent: {
-    paddingTop: 0,
     paddingBottom: 24,
   },
   emptyState: {
     alignItems: "center",
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderColor: colors.border,
+    borderRadius: 18,
+    borderWidth: 1,
     marginTop: 10,
     padding: 24,
   },

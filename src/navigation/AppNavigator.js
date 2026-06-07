@@ -9,6 +9,7 @@ import RegisterScreen from "../screens/RegisterScreen";
 import HomeScreen from "../screens/HomeScreen";
 import CreateGameScreen from "../screens/CreateGameScreen";
 import GameDetailsScreen from "../screens/GameDetailsScreen";
+import PlayerMapScreen from "../screens/PlayerMapScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import colors from "../theme/colors";
 
@@ -24,7 +25,7 @@ function Loader() {
 
 function AuthStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
@@ -39,6 +40,7 @@ function MainStack() {
         headerStyle: { backgroundColor: colors.background },
         headerShadowVisible: false,
         headerTintColor: colors.text,
+        headerTitleStyle: { fontWeight: "900" },
         contentStyle: { backgroundColor: colors.background },
       }}
     >
@@ -49,6 +51,7 @@ function MainStack() {
       />
       <Stack.Screen name="CreateGame" component={CreateGameScreen} options={{ title: "Create Game" }} />
       <Stack.Screen name="GameDetails" component={GameDetailsScreen} options={{ title: "Game Details" }} />
+      <Stack.Screen name="PlayerMap" component={PlayerMapScreen} options={{ title: "Live Map" }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: "Profile" }} />
     </Stack.Navigator>
   );

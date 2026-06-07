@@ -7,6 +7,7 @@ Gully is a beginner-friendly React Native + Firebase mobile app for finding team
 - Register and login with Firebase Authentication
 - Create a game post with sport, address, time, and player limit
 - View open games on the home screen
+- View open games on a realtime Google map
 - Search and filter games by sport or address
 - Send a request to join a game
 - Let the game creator accept or reject requests
@@ -18,6 +19,7 @@ Gully is a beginner-friendly React Native + Firebase mobile app for finding team
 ```text
 mad/
 |-- App.js
+|-- app.config.js
 |-- app.json
 |-- babel.config.js
 |-- package.json
@@ -44,6 +46,7 @@ mad/
     |   |-- GameDetailsScreen.js
     |   |-- HomeScreen.js
     |   |-- LoginScreen.js
+    |   |-- PlayerMapScreen.js
     |   |-- ProfileScreen.js
     |   `-- RegisterScreen.js
     |-- services/
@@ -87,7 +90,10 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=xxxx
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=xxxx
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=xxxx
 EXPO_PUBLIC_FIREBASE_APP_ID=xxxx
+EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=xxxx
 ```
+
+The Google key is used for native Google Maps. Enable Maps SDK for Android in Google Cloud.
 
 ### 4. Firestore rules
 
@@ -100,6 +106,26 @@ npm start
 ```
 
 Then open it in Expo Go or an Android emulator.
+
+### 6. Build an APK for Android
+
+Run this inside the `mad` folder:
+
+```powershell
+npm run apk
+```
+
+The generated installable APK is created at:
+
+```text
+android/app/build/outputs/apk/release/app-release.apk
+```
+
+For convenience, this workspace also has a copied APK at:
+
+```text
+Gully.apk
+```
 
 ## Firestore data structure
 
@@ -155,6 +181,14 @@ Then open it in Expo Go or an Android emulator.
 - App listens to Firestore in real time
 - User can search by address or sport
 - User can filter by sport chips
+- User can open the live player map
+
+### Live Map
+
+- App requests foreground location permission
+- Open games with saved coordinates appear as Google Maps markers
+- Marker data updates in real time from Firestore
+- Player can center the map on current or saved profile location
 
 ### Create Game
 
@@ -184,7 +218,6 @@ Then open it in Expo Go or an Android emulator.
 
 ## Notes
 
-- This version does not use Google Maps
-- This version does not use device GPS
+- Google Maps needs a valid `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` for map display
+- Device GPS needs foreground location permission on the phone
 - Firebase is still required because login and game data come from Firebase
-- I could not run `npm install` in this environment, so you still need to install packages locally

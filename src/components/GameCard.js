@@ -4,7 +4,7 @@ import colors from "../theme/colors";
 import { formatGameDate } from "../utils/date";
 import { getSportMeta } from "../utils/sportMeta";
 
-export default function GameCard({ item, onPress }) {
+export default function GameCard({ item, onPress, distanceText }) {
   const sport = getSportMeta(item.sport);
   const seatsLeft = Math.max((item.maxPlayers || 0) - (item.playerCount || 0), 0);
 
@@ -20,13 +20,17 @@ export default function GameCard({ item, onPress }) {
             <Text style={styles.hostText}>Hosted by {item.creatorName}</Text>
           </View>
         </View>
-        <Text style={styles.badge}>{item.status}</Text>
+        <Text style={[styles.badge, item.status === "full" && styles.fullBadge]}>{item.status}</Text>
       </View>
-      {item.skillLevel ? <Text style={styles.skillText}>Level: {item.skillLevel}</Text> : null}
+      <View style={styles.metaRow}>
+        {item.skillLevel ? <Text style={styles.skillText}>Level: {item.skillLevel}</Text> : null}
+        {distanceText ? <Text style={styles.distanceText}>{distanceText}</Text> : null}
+      </View>
       <Text style={styles.location}>{item.locationName}</Text>
+      {item.locality ? <Text style={styles.locality}>{item.locality}</Text> : null}
       <Text style={styles.info}>Time: {formatGameDate(item.gameTime)}</Text>
       <View style={styles.footerRow}>
-        <Text style={styles.info}>
+        <Text style={styles.playerInfo}>
           Players: {item.playerCount}/{item.maxPlayers}
         </Text>
         <Text style={styles.seatsText}>{seatsLeft} spots left</Text>
@@ -38,9 +42,9 @@ export default function GameCard({ item, onPress }) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.card,
-    borderRadius: 20,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#EEF2F7",
+    borderColor: colors.border,
     elevation: 1,
     marginBottom: 14,
     padding: 18,
@@ -62,7 +66,7 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: "center",
-    borderRadius: 14,
+    borderRadius: 12,
     height: 44,
     justifyContent: "center",
     width: 44,
@@ -72,7 +76,7 @@ const styles = StyleSheet.create({
   },
   sport: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
   },
   hostText: {
@@ -91,17 +95,36 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     textTransform: "capitalize",
   },
+  fullBadge: {
+    backgroundColor: "#FEE2E2",
+    color: colors.danger,
+  },
+  metaRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  skillText: {
+    color: colors.primaryDark,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  distanceText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: "700",
+  },
   location: {
     color: colors.text,
     fontSize: 15,
     fontWeight: "600",
     marginTop: 10,
   },
-  skillText: {
-    color: colors.primaryDark,
-    fontSize: 12,
-    fontWeight: "700",
-    marginTop: 12,
+  locality: {
+    color: colors.subText,
+    fontSize: 13,
+    marginTop: 6,
   },
   info: {
     color: colors.subText,
@@ -112,6 +135,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 2,
+  },
+  playerInfo: {
+    color: colors.subText,
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 8,
   },
   seatsText: {
     color: colors.primaryDark,
